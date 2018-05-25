@@ -2,16 +2,22 @@ package assignment4Game;
 
 public class Configuration {
 
-	public int[][] board;
+	public int[][] board; 
 	public int[] available;
 	boolean spaceLeft;
 
 	public Configuration(){
+		// Create a 7 by 6 board, with 42 total spaces.
 		board = new int[7][6];
-		available = new int[7];
-		spaceLeft = true;
+
+		// Initialize an array of integers that will hold the available spots in a column.
+		available = new int[7]; 
+
+		// Initialize a boolean variable that will be false if no further pieces can be placed on the board.
+		spaceLeft = true; 
 	}
 
+	//Print out the board(Very basic for now!)
 	public void print(){
 		System.out.println("| 0 | 1 | 2 | 3 | 4 | 5 | 6 |");
 		System.out.println("+---+---+---+---+---+---+---+");
@@ -29,6 +35,7 @@ public class Configuration {
 		}
 	}
 
+	//Allow a player to add a disk to the board at a specific column.
 	public void addDisk (int index, int player){
 
 		this.board[index][this.available[index]] = player;
@@ -45,6 +52,7 @@ public class Configuration {
 		}
 	}
 
+	//Remove a disk from the board, to be used in some methods.
 	public void removeDisk(int index,int player) {
 		this.board[index][this.available[index]-1] = 0;
 		(this.available[index])--;
@@ -60,8 +68,12 @@ public class Configuration {
 		}
 
 	}
+
+	//Determine if a player's move wins them the game.
+	//A player has won if he or she has four consecutive pieces in any direction.
 	public boolean isWinning (int lastColumnPlayed, int player){
 
+		//TODO: CAN I EVALUATE THESE USING THREADS? find out!!
 
 		// Four in a row BELOW said piece:
 		int inARowBelow = 0;
@@ -70,18 +82,17 @@ public class Configuration {
 		while ( this.board[column][row] == player) {
 			row--;
 			inARowBelow++;
-
 			if (inARowBelow == 4)
 				return true;
 			if (row<0)
 				break;
 		}
 		//System.out.println("In a row BELOW: "+ inARowBelow);
+
 		//Four in a row TOP LEFT of said piece:
 		int inARowTopLeft=0;
 		row=this.available[lastColumnPlayed] - 1;
 		column = lastColumnPlayed;
-
 		while ( this.board[column][row] == player) {
 			column--;
 			row++;
@@ -91,13 +102,12 @@ public class Configuration {
 			if (row>5 || column<0)
 				break;
 		}
-		
 		//System.out.println("In a row TOP LEFT: "+ inARowTopLeft);
+
 		//Four in a row LEFT of said piece:
 		int inARowLeft=0;
 		row=this.available[lastColumnPlayed] - 1;
 		column = lastColumnPlayed;
-
 		while ( this.board[column][row] == player) {
 			column--;
 			inARowLeft++;
@@ -106,8 +116,8 @@ public class Configuration {
 			if (column<0)
 				break;
 		}
-
 		//System.out.println("In a row LEFT: "+ inARowLeft);
+
 		//Four in a row BOTTOM LEFT of said piece:
 		int inARowBottomLeft=0;
 		row=this.available[lastColumnPlayed] - 1;
@@ -121,13 +131,12 @@ public class Configuration {
 			if (column<0 || row<0)
 				break;
 		}
-		
 		//System.out.println("In a row BOTTOM LEFT: "+ inARowBottomLeft);
+
 		//Four in a row BOTTOM RIGHT of said piece:
 		int inARowBottomRight=0;
 		row=this.available[lastColumnPlayed] - 1;
 		column = lastColumnPlayed;
-
 		while ( this.board[column][row] == player) {
 			column++;
 			row--;
@@ -137,13 +146,12 @@ public class Configuration {
 			if (column>6 || row<0)
 				break;
 		}
-
 		//System.out.println("In a row BOTTOM RIGHT: "+ inARowBottomRight);
+
 		//Four in a row RIGHT of said piece:
 		int inARowRight=0;
 		row=this.available[lastColumnPlayed] - 1;
 		column = lastColumnPlayed;
-
 		while ( this.board[column][row] == player) {
 			column++;
 			inARowRight++;
@@ -152,13 +160,12 @@ public class Configuration {
 			if (column>6)
 				break;
 		}
-		
 		//System.out.println("In a row RIGHT: "+ inARowRight);
+
 		//Four in a row TOP RIGHT of said piece:
 		int inARowTopRight=0;
 		row=this.available[lastColumnPlayed] - 1;
 		column = lastColumnPlayed;
-
 		while ( this.board[column][row] == player) {
 			column++;
 			row++;
@@ -174,7 +181,7 @@ public class Configuration {
 
 		//Check if the piece is within a connect four diagonally:
 		//The piece has been considered twice, so subtract one
-		
+
 		if((inARowTopRight + inARowBottomLeft-1)>= 4)
 			return true;
 		if ((inARowTopLeft+inARowBottomRight-1)>=4)
@@ -185,13 +192,13 @@ public class Configuration {
 		if ((inARowLeft+inARowRight-1)>=4)
 			return true;
 
-
-
-		return false; // DON'T FORGET TO CHANGE THE RETURN
+		return false; // The player has not won.
 	}
 
+	//Checks if a player can win next round.
+	//Returns the first column if they can, else returns -1.
 	public int canWinNextRound (int player){
-	
+
 		for (int i=0;i<7;i++) {
 			if (this.available[i]<=5) {
 				this.addDisk(i, player);//drop a disk, check if they won, then remove it.
@@ -205,8 +212,11 @@ public class Configuration {
 		return -1; // DON'T FORGET TO CHANGE THE RETURN
 	}
 
+	//Checks if a player can have a GUARANTEED victory in two rounds.
+	//Returns the first column if they do, else returns -1
 	public int canWinTwoTurns (int player){
-		
+
+		//Find out who the enemy player is.
 		int otherPlayer;
 		int j=0;
 		if (player == 1)
@@ -220,33 +230,33 @@ public class Configuration {
 			//Check if there's space available at column "i":
 			if (this.available[i]<=5) {
 				this.addDisk(i, player);
-				
+
 				//If there's no space left let's just return -1
 				if (!this.spaceLeft) {
 					this.removeDisk(i, player);
 					return -1;
 				}
-				
+
 				//Make sure other player can't win!!
 				if (this.canWinNextRound(otherPlayer) == -1) {
-					
+
 					//Let's see if the opponent can stop our next connect four.
 					for (j = 0;j<7;j++) {
-						
+
 						//If there's space in this column, let's try it.
 						if (this.available[j]<=5) {
 							this.addDisk(j, otherPlayer);
-							
+
 							//If there's no space left let's just return -1
 							if (!this.spaceLeft) {
 								this.removeDisk(j, otherPlayer);
 								this.removeDisk(i, player);
 								return -1;
 							}
-							
+
 							/* If the opponent can place a piece in column j
 			 that makes it so that Player doesn't win next turn, this move wasn't good. */ 
-							
+
 							if (this.canWinNextRound(player) == -1) {
 								this.removeDisk(j, otherPlayer);
 								break;
@@ -255,14 +265,15 @@ public class Configuration {
 							this.removeDisk(j, otherPlayer);
 						}
 					}
-					
-					//If we scrolled through all 7 columns and can't stop the next connect four, player wins in 2 turns.
+
+					/*If we scrolled through all 7 columns and can't stop the next connect four, 
+					 player wins in 2 turns.	 */
 					if (j == 7) {
 						this.removeDisk(i, player);
 						return i;
 					}
 				}
-		
+
 				this.removeDisk(i, player);
 			}
 		}
