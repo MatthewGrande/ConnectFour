@@ -1,4 +1,4 @@
-package assignment4Game;
+package connectfour;
 
 import java.io.*;
 import java.util.Random;

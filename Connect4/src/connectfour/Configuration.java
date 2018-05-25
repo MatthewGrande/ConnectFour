@@ -1,4 +1,4 @@
-package assignment4Game;
+package connectfour;
 
 public class Configuration {
 
