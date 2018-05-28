@@ -6,7 +6,9 @@ import java.util.Random;
 /**
  * 
  * @author Matthew Grande
- * @version 1.2 bot places piece on top of player 2 until it sees a winning opportunity
+ * @version 1.3 bot seeks opportunities to guarantee a win 2 turns in advance
+ * If it can't it seeks a connect 3
+ * If it's confused, it places piece on top of player 2 until those are possible
  * This class configures the game, and is where the bot is stored,
  *
  */
@@ -21,12 +23,12 @@ public class Game {
 	 * @param input takes in an input,and allows the user to place a piece in the specified column
 	 * @return returns the player that has won.
 	 */
-	
+
 	public static int play (InputStreamReader input){
 		BufferedReader keyboard = new BufferedReader(input);
 		Configuration board = new Configuration();
 		board.print(); //Prints out the empty board
-		
+
 		int columnPlayed = 0; 
 		int player;
 
@@ -126,30 +128,59 @@ public class Game {
 	 * @param board Checks the current board state to analyze its next move 
 	 * @return the optimal move for the bot
 	 */
-	
+
 	public static int movePlayer1 (int lastColumnPlayed, Configuration board){
 
 		int i=1;
-		
-		if (board.winGameNextTurn(1) != -1) // if the AI can win next turn, he will!
-			return board.winGameNextTurn(1);
+		int bot = 1;
+		int human = 2;
 
-		else if (board.winGameNextTurn(2) != -1) // else if the human can win next turn, the AI will stop him.
-			return board.winGameNextTurn(2);
+		if (board.winningMoveAvailable(bot) != -1 ) //if the AI has a winning move available, it'll play it.
+		{
+			System.out.println("Bot just won the game btw! ");
+			return board.winningMoveAvailable(bot);
+		}
 
-		else if (board.winGameTwoTurns(1) != -1)
-			return board.winGameTwoTurns(1); // if the AI can win in two turns, he will
-
-		else if (board.winGameTwoTurns(2) != -1) // else if the human can win in two turns, the AI will stop him
+		else if (board.winGameNextTurn(human) != -1) // else if the human can win next turn, the AI will stop him.
+		{
+			System.out.println("Bot is trying to deny a winning move! ");
+			return board.winGameNextTurn(human);
+		}
+		else if (board.winGameTwoTurns(human) != -1) // else if the human can win in two turns, the AI will stop him
 			//TODO: THIS ISNT ALWAYS A  CORRECT WAY OF STOPPING THE PLAY!!!
 			//IT OFTEN IS THOUGH!!
-			return board.winGameTwoTurns(2);
+		{
+			System.out.println("Bot is trying to deny a foreseen winning move! ");
+			return board.winGameTwoTurns(human);
+		}
+		//The bot will then aggressively seek a winning position
+		else if (board.getInWinningPosition(bot) != -1)
+		{
+			System.out.println("Bot is trying to move into a winning position! ");
+			return board.getInWinningPosition(bot);
+		}
+
+		//The bot will then seek connect threes to set himself up
+		else if (board.connectThreeNextTurn(bot) != -1)
+		{
+			System.out.println("Bot is getting a connect three!");
+			return board.connectThreeNextTurn(bot);
+		}
+		
+		else if (board.moveTowardsConnectThree(bot) != -1) {
+			System.out.println("The bot's setting up a connect three!");
+			return board.moveTowardsConnectThree(bot);
+		}
 
 		else if (board.hasSpace(lastColumnPlayed)) // otherwise, he'll put a piece on top of yours if there is space
+		{
+			System.out.println("Bot is just copying you! ");
 			return lastColumnPlayed;
+		}
 
 		//Bad way of determining where he'll place a piece if the column is filled.
 		else {
+				System.out.println("Bot doesn't know what to do! ");
 			while(true)
 			{
 				if ((lastColumnPlayed-i)>=0 && board.hasSpace(lastColumnPlayed-i))
