@@ -1,23 +1,34 @@
 package connectfour;
 
+/**
+ * 
+ * @author Matthew Grande
+ * @version 1.2 bot places piece on top of player 2 until it sees a winning opportunity
+ * This class configures the board, and is where the where all the "move" methods are stored.
+ *
+ */
 public class Configuration {
-
+	public static final int WIDTH = 7;
+	public static final int HEIGHT = 6;
 	public int[][] board; 
 	public int[] available;
 	boolean spaceLeft;
 
 	public Configuration(){
 		// Create a 7 by 6 board, with 42 total spaces.
-		board = new int[7][6];
+		board = new int[WIDTH][HEIGHT];
 
 		// Initialize an array of integers that will hold the available spots in a column.
-		available = new int[7]; 
+		available = new int[HEIGHT+1]; 
 
 		// Initialize a boolean variable that will be false if no further pieces can be placed on the board.
 		spaceLeft = true; 
 	}
 
-	//Print out the board(Very basic for now!)
+	/**
+	 * Prints out the board(Very basic for now!)
+	 */
+
 	public void print(){
 		System.out.println("| 0 | 1 | 2 | 3 | 4 | 5 | 6 |");
 		System.out.println("+---+---+---+---+---+---+---+");
@@ -35,45 +46,37 @@ public class Configuration {
 		}
 	}
 
-	//Allow a player to add a disk to the board at a specific column.
-	public void addDisk (int index, int player){
+	/**
+	 * Allow a player to add a disk to the board at a specific column.
+	 * @param column the column that the turn player is placing their piece in
+	 * @param player the turn player
+	 */
 
-		this.board[index][this.available[index]] = player;
-		(this.available[index])++;
-
-		for (int i=0; i<7;i++) {
-			if (this.available[i]<=5)
-			{
-				this.spaceLeft = true;
-				break;
-			}
-			else
-				this.spaceLeft = false;
-		}
+	public void addDisk (int column, int player){
+		this.board[column][this.available[column]] = player;
+		(this.available[column])++;
 	}
 
-	//Remove a disk from the board, to be used in some methods.
-	public void removeDisk(int index,int player) {
-		this.board[index][this.available[index]-1] = 0;
-		(this.available[index])--;
+	/**
+	 * Remove a disk from the board, to be used in some methods.
+	 * @param column the column that we're removing the piece from
+	 * @param player the player whose piece we're removing
+	 */
 
-		for (int i=0; i<7;i++) {
-			if (this.available[i]<=5)
-			{
-				this.spaceLeft = true;
-				break;
-			}
-			else
-				this.spaceLeft = false;
-		}
-
+	public void removeDisk(int column,int player) {
+		this.board[column][this.available[column]-1] = 0;
+		(this.available[column])--;
 	}
 
-	//Determine if a player's move wins them the game.
-	//A player has won if he or she has four consecutive pieces in any direction.
-	public boolean isWinning (int lastColumnPlayed, int player){
+	/**
+	 * Determine if a player's move has won them the game.
+	 * A player has won if he or she has four consecutive pieces in any direction.
+	 * @param lastColumnPlayed Takes the last column played
+	 * @param player takes the player that played last
+	 * @return true if won, false if lost
+	 */
 
-		//TODO: CAN I EVALUATE THESE USING THREADS? find out!!
+	public boolean wonTheGame (int lastColumnPlayed, int player){
 
 		// Four in a row BELOW said piece:
 		int inARowBelow = 0;
@@ -195,89 +198,112 @@ public class Configuration {
 		return false; // The player has not won.
 	}
 
-	//Checks if a player can win next round.
-	//Returns the first column if they can, else returns -1.
-	public int canWinNextRound (int player){
+	/**
+	 * Returns the column that a player can play to win the game.
+	 * @param player Takes the player that it will analyze
+	 * @return the move that will win the next round, or -1 if player can't win next round.
+	 */
 
-		for (int i=0;i<7;i++) {
-			if (this.available[i]<=5) {
-				this.addDisk(i, player);//drop a disk, check if they won, then remove it.
-				if (this.isWinning(i, player)) {
-					this.removeDisk(i,player);
-					return i;
+	public int winGameNextTurn (int player){
+
+		for (int column=0;column<7;column++) {
+			if (hasSpace(column)) {
+				this.addDisk(column, player);//drop a disk, check if they won, then remove it.
+
+				//If this disk wins them the game, remove it and return the column number
+				if (this.wonTheGame(column, player)) {
+					this.removeDisk(column,player);
+					return column;
 				}
-				this.removeDisk(i,player);
+				this.removeDisk(column,player);
 			}
 		}
-		return -1; // DON'T FORGET TO CHANGE THE RETURN
+		return -1;
 	}
 
-	//Checks if a player can have a GUARANTEED victory in two rounds.
-	//Returns the first column if they do, else returns -1
-	public int canWinTwoTurns (int player){
+	/**
+	 * Returns the column that a player can play to guarantee a victory on his or her next move.
+	 * If this is not possible, returns -1
+	 * @param player Takes the player that it will analyze
+	 * @return the move that will guarantee a win, or -1 if the player can't guarantee a victory with 
+	 * his or her next move.
+	 */
+
+	public int winGameTwoTurns (int player){
 
 		//Find out who the enemy player is.
-		int otherPlayer;
-		int j=0;
-		if (player == 1)
-			otherPlayer = 2;
-		else
-			otherPlayer = 1;
+		int otherPlayer = enemyPlayer(player);
+
+		int potentialCounterplay=0;
 
 		//Let's iterate through the columns and see if there's one place that allows us to win in two turns:
-		for (int i=0;i<7;i++) {
+		for (int potentialMove=0;potentialMove<7;potentialMove++) {
 
-			//Check if there's space available at column "i":
-			if (this.available[i]<=5) {
-				this.addDisk(i, player);
+			//Check if there's space available at column "potentialMove":
+			if (hasSpace(potentialMove)) {
+				this.addDisk(potentialMove, player);
 
-				//If there's no space left let's just return -1
-				if (!this.spaceLeft) {
-					this.removeDisk(i, player);
-					return -1;
-				}
+				//Check if the opponent can stop our next connect four.
+				for (potentialCounterplay = 0; potentialCounterplay<7; potentialCounterplay++) {
 
-				//Make sure other player can't win!!
-				if (this.canWinNextRound(otherPlayer) == -1) {
+					/*If there's space in this column, the other player will place a token and 
+					 * we'll see if they can deny the victory
+					 */
 
-					//Let's see if the opponent can stop our next connect four.
-					for (j = 0;j<7;j++) {
+					if (hasSpace(potentialCounterplay)) {
+						this.addDisk(potentialCounterplay, otherPlayer);
 
-						//If there's space in this column, let's try it.
-						if (this.available[j]<=5) {
-							this.addDisk(j, otherPlayer);
+						/*
+						 * If the opponent can place a piece in column "potentialCounterplay"
+						 * that makes it so that the Player doesn't win next turn,
+						 * this move isn't optimal
+						 */
 
-							//If there's no space left let's just return -1
-							if (!this.spaceLeft) {
-								this.removeDisk(j, otherPlayer);
-								this.removeDisk(i, player);
-								return -1;
-							}
-
-							/* If the opponent can place a piece in column j
-			 that makes it so that Player doesn't win next turn, this move wasn't good. */ 
-
-							if (this.canWinNextRound(player) == -1) {
-								this.removeDisk(j, otherPlayer);
-								break;
-							}
-							//Let's remove the disk we just placed and try again.
-							this.removeDisk(j, otherPlayer);
+						if (this.winGameNextTurn(player) == -1) {
+							this.removeDisk(potentialCounterplay, otherPlayer);
+							break;
 						}
-					}
 
-					/*If we scrolled through all 7 columns and can't stop the next connect four, 
-					 player wins in 2 turns.	 */
-					if (j == 7) {
-						this.removeDisk(i, player);
-						return i;
+						//Let's remove the disk we just placed and try again.
+						this.removeDisk(potentialCounterplay, otherPlayer);
 					}
 				}
 
-				this.removeDisk(i, player);
+				/*If we iterated through all 7 columns and the opponent can't stop 
+				 * the next connect four, player wins in 2 turns.	
+				 * If they can stop it, let's try the next column. */
+
+				if (potentialCounterplay == 7) {
+					this.removeDisk(potentialMove, player);
+					return potentialMove;
+				}
+				this.removeDisk(potentialMove, player);
 			}
 		}
 		return -1; 
 	}
 
+	/**
+	 * Checks if there is space in a column for a token to be placed
+	 * @param column takes the column that is being played
+	 * @return true if there is space in the column, false otherwise
+	 */
+	public boolean hasSpace(int column) {
+		return this.available[column]<=5;
+	}
+
+	/**
+	 * Determines who the opposing player is
+	 * @param player takes the current player
+	 * @return the enemy player
+	 */
+	
+	private int enemyPlayer(int player) {
+		int otherPlayer;
+		if (player == 1)
+			otherPlayer = 2;
+		else
+			otherPlayer = 1;
+		return otherPlayer;
+	}
 }
