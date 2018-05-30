@@ -6,7 +6,9 @@ import java.util.Random;
 /**
  * 
  * @author Matthew Grande
- * @version 1.3 bot seeks opportunities to guarantee a win 2 turns in advance
+ * @version 1.4 bot seeks opportunities to guarantee a win 2 turns in advance
+ * It denies win attempts
+ * It denies attempts to get into a winning position
  * If it can't it seeks a connect 3
  * If it's confused, it places piece on top of player 2 until those are possible
  * This class configures the game, and is where the bot is stored,
@@ -44,6 +46,7 @@ public class Game {
 		board.addDisk(firstMovePlayer1(), 1);
 		board.print(); //Print out the board
 		int nbTurn = 1;
+		String yourPattern = "";
 
 		while (board.spaceLeft) { // While there is space on the board
 			//	while (nbTurn < 42) { // maximum of turns allowed by the size of the grid
@@ -52,10 +55,11 @@ public class Game {
 			//TODO: this ^ will change once we find out who starts.
 			if (player == 2){ 
 				columnPlayed = getNextMove(keyboard, board, 2);
+				yourPattern+=columnPlayed;
 			}
 
 			if (player == 1){
-				columnPlayed = movePlayer1(columnPlayed, board);
+				columnPlayed = moveBot(1, columnPlayed, board);
 			}
 
 			System.out.println(columnPlayed); // GOING TO REMOVE THIS ONCE I GET A NICE BOARD
@@ -64,7 +68,12 @@ public class Game {
 
 			if (board.wonTheGame(columnPlayed, player)){
 				board.print();
-				System.out.println("Congrats to player " + player + " !");
+				if (player == 1)
+					System.out.println("Archon beat you :) ");
+				else
+					System.out.println("Looks like you won! Upgrades are coming.");
+				//System.out.println("Congrats to player " + player + " !");
+				System.out.println("Your moves this game were:" + yourPattern);
 				return(player);
 			}
 
@@ -129,58 +138,74 @@ public class Game {
 	 * @return the optimal move for the bot
 	 */
 
-	public static int movePlayer1 (int lastColumnPlayed, Configuration board){
-
+	public static int moveBot (int player, int lastColumnPlayed, Configuration board){
+		
 		int i=1;
-		int bot = 1;
-		int human = 2;
+		int otherPlayer = enemyPlayer(player);
 
-		if (board.winningMoveAvailable(bot) != -1 ) //if the AI has a winning move available, it'll play it.
+		//if the AI has a winning move available, it'll play it.
+		int gameWinningPlay = board.winningMoveAvailable(player);
+		if (possibleMove(gameWinningPlay)) 
 		{
-			System.out.println("Bot just won the game btw! ");
-			return board.winningMoveAvailable(bot);
+			//System.out.println("Bot just won the game btw! Using the move: "+ gameWinningPlay);
+			return gameWinningPlay;
 		}
 
-		else if (board.winGameNextTurn(human) != -1) // else if the human can win next turn, the AI will stop him.
+		// If the human can win next turn, the AI will stop him.
+		//TODO: THIS IS WRONG, THIS IS ONLY MANDATORY IF THE OTHER PLAYER HAS A WINNING MOVE BEFORE WE DO!!
+		
+		int humanWinningPlay = board.winningMoveAvailable(otherPlayer);
+	//	System.out.println("The human has a winning move available at: "+ humanWinningPlay);
+		if (possibleMove(humanWinningPlay))
 		{
-			System.out.println("Bot is trying to deny a winning move! ");
-			return board.winGameNextTurn(human);
+			//System.out.println("Bot is trying to deny a winning move! ");
+			int denyWin = board.denyWinningMove(player);
+			if (possibleMove(denyWin))
+				return denyWin; 
 		}
-		else if (board.winGameTwoTurns(human) != -1) // else if the human can win in two turns, the AI will stop him
-			//TODO: THIS ISNT ALWAYS A  CORRECT WAY OF STOPPING THE PLAY!!!
-			//IT OFTEN IS THOUGH!!
-		{
-			System.out.println("Bot is trying to deny a foreseen winning move! ");
-			return board.winGameTwoTurns(human);
-		}
+
 		//The bot will then aggressively seek a winning position
-		else if (board.getInWinningPosition(bot) != -1)
-		{
-			System.out.println("Bot is trying to move into a winning position! ");
-			return board.getInWinningPosition(bot);
-		}
 
-		//The bot will then seek connect threes to set himself up
-		else if (board.connectThreeNextTurn(bot) != -1)
-		{
-			System.out.println("Bot is getting a connect three!");
-			return board.connectThreeNextTurn(bot);
+		for (int turns=2;turns<5;turns++) {
+			int seekWinningPosition = board.searchWinXTurns(player,turns);
+			if (possibleMove(seekWinningPosition)) {
+				//System.out.println("Bot is looking to end the game.");
+				return seekWinningPosition;
+			}
 		}
 		
-		else if (board.moveTowardsConnectThree(bot) != -1) {
-			System.out.println("The bot's setting up a connect three!");
-			return board.moveTowardsConnectThree(bot);
+		int humanLookingForWin = board.searchForWinningPosition(otherPlayer);
+		//System.out.println("The human will look for a win on his next turn in column: "+ humanLookingForWin);
+		if (possibleMove(humanLookingForWin)) {
+			int denyWinningPosition = board.denyWinningPosition(otherPlayer);
+			if (possibleMove(denyWinningPosition))
+			return denyWinningPosition;
+		}
+		
+		//The bot will then seek connect threes to set himself up
+		int connectThreeNow = board.connectThreeNextTurn(player);
+		if (possibleMove(connectThreeNow))
+		{
+			System.out.println("Bot is getting a connect three!");
+			return connectThreeNow;
 		}
 
-		else if (board.hasSpace(lastColumnPlayed)) // otherwise, he'll put a piece on top of yours if there is space
+		int seekConnectThree = board.moveTowardsConnectThree(player);
+		if (possibleMove(seekConnectThree)) {
+			System.out.println("The bot's setting up a connect three!");
+			return seekConnectThree;
+		}
+
+
+		if (board.hasSpace(lastColumnPlayed)) // otherwise, he'll put a piece on top of yours if there is space
 		{
-			System.out.println("Bot is just copying you! ");
+			//System.out.println("Bot is just copying you! ");
 			return lastColumnPlayed;
 		}
 
 		//Bad way of determining where he'll place a piece if the column is filled.
 		else {
-				System.out.println("Bot doesn't know what to do! ");
+			//System.out.println("Bot doesn't know what to do! ");
 			while(true)
 			{
 				if ((lastColumnPlayed-i)>=0 && board.hasSpace(lastColumnPlayed-i))
@@ -190,6 +215,32 @@ public class Game {
 				i++;
 			}
 		}
+	}
+
+	/**
+	 * This method will return true if there is a possible move from the method used in the 
+	 * parameter.
+	 * @param result takes in the int result produced by other methods, -1 if failed, or an integer 
+	 * between 0 and 6 inclusive if successful
+	 * @return a boolean value true if successful, and false if failed.
+	 */
+	private static boolean possibleMove(int result) {
+		if (result != -1) return true;
+		else return false;
+	}
+	/**
+	 * Determines who the opposing player is
+	 * @param player takes the current player
+	 * @return the enemy player
+	 */
+
+	private static int enemyPlayer(int player) {
+		int otherPlayer;
+		if (player == 1)
+			otherPlayer = 2;
+		else
+			otherPlayer = 1;
+		return otherPlayer;
 	}
 
 }

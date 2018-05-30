@@ -3,7 +3,9 @@ package connectfour;
 /**
  * 
  * @author Matthew Grande
- * @version 1.3 bot seeks opportunities to guarantee a win 2 turns in advance
+ * @version 1.4 bot seeks opportunities to guarantee a win 2 turns in advance
+ * It denies win attempts
+ * It denies attempts to get into a winning position
  * If it can't it seeks a connect 3
  * If it's confused, it places piece on top of player 2 until those are possible
  * This class configures the board, and is where the where all the "move" methods are stored.
@@ -106,32 +108,35 @@ public class Configuration {
 	}
 
 	/**
-	 * Returns the column that a player can play to guarantee a victory on his or her next move.
-	 * If this is not possible, returns -1
-	 * @param player Takes the player that it will analyze
-	 * @return the move that will guarantee a win, or -1 if the player can't guarantee a victory with 
-	 * his or her next move.
+	 * A recursive function that makes the bot think X turns into the future for a super play.
+	 * The bot will look for guaranteed wins X turns ahead.
+	 * @param player that is looking for super play
+	 * @param x the number of moves that the bot is thinking ahead
+	 * @return the column that allows for a guaranteed connect 4 in x turns.
 	 */
+	public int winGameXTurns(int player, int x) {
 
-	public int winGameTwoTurns (int player){
-
-		//Find out who the enemy player is.
 		int otherPlayer = enemyPlayer(player);
 		int potentialCounterplay=0;
 
-		//Let's iterate through the columns and see if there's one place that allows us to win in two turns:
-		for (int potentialMove=0;potentialMove<7;potentialMove++) {
+		//Base case
+		if (x == 1) {
+			return winGameNextTurn(player);
+		}
 
+		else {
+			//Check if the enemy player can win next turn, if he can this play won't be optimal.
+			if (possibleMove(this.winGameNextTurn(otherPlayer)))
+				return -1;
 
-			//Check if there's space available at column "potentialMove":
-			if (hasSpace(potentialMove)) {
-				this.addDisk(potentialMove, player);
+			for (int potentialMove=0;potentialMove<7;potentialMove++) {
 
-				//Make sure the other player can't win!
-				if (this.winGameNextTurn(otherPlayer) == -1) {
+				//Check if there's space available at column "potentialMove":
+				if (hasSpace(potentialMove)) {
+					this.addDisk(potentialMove, player);
 
 					//Check if the opponent can stop our next connect four.
-					for (potentialCounterplay = 0; potentialCounterplay<7; potentialCounterplay++) {
+					for (potentialCounterplay = 0; potentialCounterplay<7;potentialCounterplay++) {
 
 						/*If there's space in this column, the other player will place a token and 
 						 * we'll see if they can deny the victory
@@ -142,33 +147,30 @@ public class Configuration {
 
 							/*
 							 * If the opponent can place a piece in column "potentialCounterplay"
-							 * that makes it so that the Player doesn't win next turn,
-							 * this move isn't optimal
+							 * that makes it so that the Player doesn't win in "X-1" turns,
+							 * this move wasn't a game winning play.
 							 */
 
-							if (this.winGameNextTurn(player) == -1) {
+							if (!possibleMove(winGameXTurns(player,x-1))) {
 								this.removeDisk(potentialCounterplay, otherPlayer);
 								break;
 							}
-
-							//Let's remove the disk we just placed and try again.
 							this.removeDisk(potentialCounterplay, otherPlayer);
 						}
 					}
+					//Let's remove the disk we just placed and try again.
+					this.removeDisk(potentialMove, player);
 
 					/*If we iterated through all 7 columns and the opponent can't stop 
-					 * the next connect four, player wins in 2 turns.	
+					 * the next connect four, player wins in X turns.	
 					 * If they can stop it, let's try the next column. */
 
-					if (potentialCounterplay == 7) {
-						this.removeDisk(potentialMove, player);
+					if (potentialCounterplay == 7)
 						return potentialMove;
-					}
 				}
-				this.removeDisk(potentialMove, player);
 			}
+			return -1;
 		}
-		return -1; 
 	}
 
 	/**
@@ -181,19 +183,48 @@ public class Configuration {
 	}
 
 	/**
-	 * Checks to see if the player has a guaranteed win available, in either 1 or 2 turns.
+	 * Checks to see if the player has a guaranteed win available, in either 1,2,3, or 4 turns.
 	 * Returns the column where this is possible, or -1 if there is no win potential.
 	 * @param player the player that is being analyzed
 	 * @return the column that will ensure victory
 	 */
 
 	public int winningMoveAvailable (int player) {
-		if (winGameNextTurn(player) != -1)
-			return winGameNextTurn(player);
-		else if (winGameTwoTurns(player) != -1)
-			return winGameTwoTurns(player);
-		else
-			return -1;
+
+		for (int turns=1;turns<3;turns++) {
+			int 	winningMove = winGameXTurns(player,turns);
+			if (winningMove != -1)
+				return winningMove;
+		}
+		return -1;
+
+	}
+
+	/**
+	 * Allow the bot to seek out winning positions TWO TURNS in advance and aggressively make plays.
+	 * @param player 
+	 * @return returns the column that will allow a winning position, or -1 if none are available
+	 */
+	
+	public int searchForWinningPosition(int player) {
+		int otherPlayer = enemyPlayer(player);
+	
+		for (int potentialMove=0;potentialMove<7;potentialMove++) {
+			//Check if there's space available at column "potentialMove":
+			if (hasSpace(potentialMove)) {
+				this.addDisk(potentialMove, player);
+				/*Check if this move doesn't put the other player in a winning position
+				 * and that the player now has a winning move available
+				 */
+				if (possibleMove(winningMoveAvailable(player)) 
+						&& !possibleMove(winningMoveAvailable(otherPlayer))) {
+					removeDisk(potentialMove,player);
+					return potentialMove;
+				}
+				removeDisk(potentialMove,player);
+			}
+		}
+		return -1;
 	}
 
 	/**
@@ -202,7 +233,8 @@ public class Configuration {
 	 * @return returns the column that will allow a winning position, or -1 if none are available
 	 */
 
-	public int getInWinningPosition(int player) {
+	//THIS METHOD WILL MOVE MY PIECE INTO A SPOT WHERE I CAN POTENTIALLY WIN NEXT TURN
+	public int searchWin2Turns(int player) {
 		int otherPlayer = enemyPlayer(player);
 
 		for (int potentialMove=0;potentialMove<7;potentialMove++) {
@@ -212,16 +244,47 @@ public class Configuration {
 				/*Check if this move doesn't put the other player in a winning position
 				 * and that the player now has a winning move available
 				 */
-				if (winningMoveAvailable(otherPlayer) == -1 && winningMoveAvailable(player) != -1) {
-						removeDisk(potentialMove,player);
-						return potentialMove;
-					}
+				if (possibleMove(winningMoveAvailable(player)) && !possibleMove(winningMoveAvailable(otherPlayer))) {
+					removeDisk(potentialMove,player);
+					return potentialMove;
+				}
 				removeDisk(potentialMove,player);
 			}
 		}
 		return -1;
 	}
+	/**
+	 * Allow the bot to seek out winning positions TWO TURNS in advance and aggressively make plays.
+	 * @param player The player that is making the move
+	 * @param x The number of turns that the bot will look ahead for a win.
+	 * @return returns the column that will allow a winning position, or -1 if none are available
+	 */
 
+	public int searchWinXTurns(int player,int x) {
+		int otherPlayer = enemyPlayer(player);
+
+		if (x == 2) {
+			return searchWin2Turns(player);
+		}
+		
+		else {
+			for (int potentialMove=0;potentialMove<7;potentialMove++) {
+				//Check if there's space available at column "potentialMove":
+				if (hasSpace(potentialMove)) {
+					this.addDisk(potentialMove, player);
+					/*Check if this move doesn't put the other player in a winning position
+					 * and that the player now has a winning move available
+					 */
+					if (possibleMove(searchWinXTurns(player,x-1)) && !possibleMove(winningMoveAvailable(otherPlayer))) {
+						removeDisk(potentialMove,player);
+						return potentialMove;
+					}
+					removeDisk(potentialMove,player);
+				}
+			}
+			return -1;
+		}
+	}
 	/**
 	 * Check if there is a connect three on the board
 	 * @param lastColumnPlayed takes the location of the last token that was placed
@@ -231,52 +294,107 @@ public class Configuration {
 	public boolean hasConnectThree (int lastColumnPlayed, int player){
 		return hasConnectX(lastColumnPlayed,player,3);
 	}
-	
+
 	/**
 	 * 
 	 * @param the player that is playing his move
 	 * @return the column that will provide the player with a connect three
 	 */
-		public int connectThreeNextTurn(int player) {
+	public int connectThreeNextTurn(int player) {
 
-			int otherPlayer = enemyPlayer(player);
-			for (int column=0;column<7;column++) {
-				if (hasSpace(column)) {
-					//drop a disk, check if they have 3 consecutive tokens, then remove it.
-					this.addDisk(column, player);
+		int otherPlayer = enemyPlayer(player);
+		for (int column=0;column<7;column++) {
+			if (hasSpace(column)) {
+				//drop a disk, check if they have 3 consecutive tokens, then remove it.
+				this.addDisk(column, player);
 
-					/*If this disk is the 3rd consecutive token and doesn't make the other player win
-					 *remove it and return the column number
-					 */
-					if (this.hasConnectThree(column, player) && this.winningMoveAvailable(otherPlayer) == -1) {
-						this.removeDisk(column,player);
-						return column;
-					}
-
+				/*If this disk is the 3rd consecutive token and doesn't make the other player win
+				 *remove it and return the column number
+				 */
+				if (this.hasConnectThree(column, player) 
+						&& !possibleMove(this.winningMoveAvailable(otherPlayer))) {
 					this.removeDisk(column,player);
+					return column;
 				}
+				this.removeDisk(column,player);
 			}
-			return -1;
 		}
-		
-		/**
-		 * The bot will attempt to set up connect three
-		 * @param player the player that is playing his or her move
-		 * @return returns the column that will set up a connect 3
-		 */
-		public int moveTowardsConnectThree(int player) {
-			for (int column=0;column<7;column++) {
-				if (hasSpace(column)) {
-					this.addDisk(column, player);
-					if ( connectThreeNextTurn(player) != -1) {
-						this.removeDisk(column, player);
-						return column;
-					}
+		return -1;
+	}
+
+	/**
+	 * If the other player has a winning move available, deny it.
+	 * @param player the player who is making the move
+	 * @return the column that denies the winning play, or -1 if impossible(game's done).
+	 */
+
+	public int denyWinningMove(int player) {
+		//We have observed that: winningMoveAvailable(otherPlayer != -1)
+		int otherPlayer = enemyPlayer(player);
+		for (int column=0;column<7;column++) {
+			if (hasSpace(column)) {
+				this.addDisk(column, player);
+				//If the opponent no longer has a winning move available, this is the piece to place.
+				if (!possibleMove(this.winningMoveAvailable(otherPlayer))) {
 					this.removeDisk(column, player);
+					System.out.println("We're going to deny that!");
+					return column;
 				}
+				this.removeDisk(column, player);
 			}
-			return -1;
 		}
+		System.out.println("That's not stoppable, sorry");
+		return -1;
+	}
+
+	/**
+	 * If the other play can move into a winning position next turn, deny it.
+	 * @param player the player that is trying to make the defense.
+	 * @return the column that makes it possible, or -1 otherwise.
+	 */
+	public int denyWinningPosition(int player) {
+		int otherPlayer = enemyPlayer(player);
+		for (int potentialMove=0;potentialMove<7;potentialMove++) {
+			if (hasSpace(potentialMove))
+				this.addDisk(potentialMove, player);
+			//If the opponent can no longer search for a winning position
+			//AND if the opponent can't win next turn.
+			if (!possibleMove(this.winningMoveAvailable(otherPlayer)) 
+					&& !possibleMove(searchForWinningPosition(otherPlayer))) {
+				this.removeDisk(potentialMove, player);
+				return potentialMove;
+			}
+			this.removeDisk(potentialMove, player);
+		}
+		return -1;
+	}
+
+
+	/**
+	 * The bot will attempt to set up a connect three
+	 * @param player the player that is playing his or her move
+	 * @return returns the column that will set up a connect 3
+	 */
+
+	public int moveTowardsConnectThree(int player) {
+		int otherPlayer = enemyPlayer(player);
+
+		//Make sure we have space in the columns
+		for (int column=0;column<7;column++) {
+			if (hasSpace(column)) {
+				this.addDisk(column, player);
+
+				// Make sure the move we did didn't push the opponent into a winning position
+				if ( possibleMove(connectThreeNextTurn(player)) 
+						&& winningMoveAvailable(otherPlayer) == -1) {
+					this.removeDisk(column, player);
+					return column;
+				}
+				this.removeDisk(column, player);
+			}
+		}
+		return -1;
+	}
 
 	/**
 	 * Determines who the opposing player is
@@ -294,6 +412,18 @@ public class Configuration {
 	}
 
 	/**
+	 * This method will return true if there is a possible move from the method used in the 
+	 * parameter.
+	 * @param result takes in the int result produced by other methods, -1 if failed, or an integer 
+	 * between 0 and 6 inclusive if successful
+	 * @return a boolean value true if successful, and false if failed.
+	 */
+	private static boolean possibleMove(int result) {
+		if (result != -1) return true;
+		else return false;
+	}
+
+	/**
 	 * Checks if there is a connect "X" on the board. This method will 
 	 * be called by the "wonTheGame" method, which will check for connect 4,
 	 * and the "hasConnectThree method", which will check for connect 3.
@@ -304,6 +434,7 @@ public class Configuration {
 	 */
 	private boolean hasConnectX (int lastColumnPlayed, int player, int x){
 
+		//TODO: make methods for each connectX in a row(one for below, one for top left,etc)
 		//X in a row BELOW said piece:
 		int inARowBelow = 0;
 		int row = this.available[lastColumnPlayed] - 1;
@@ -423,5 +554,8 @@ public class Configuration {
 
 		return false; // The player does  not have connect "X".
 	}
-	
+
+	//TODO: implement a USEFUL connect three method, so the bot doesn't attempt to connect three
+	//OUTSIDE of the board!!
+
 }
