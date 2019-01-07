@@ -1,36 +1,35 @@
 package connectfour;
 
+
 /**
  * 
  * @author Matthew Grande
- * @version 2.0 Test suite has been added
- * bot now considers the best move out of all available options
- *  rather than only the leftmost column
- * This class configures the board, and is where the where all the "move" methods are stored.
+ * @version 3.0 GUI has been added
+ *  bot's configuration vastly cleaned up
+ *This class configures the board, and is where the where all the "move" methods are stored.
  *
  */
+
+
+
 public class Configuration {
 	public static final int WIDTH = 7;
 	public static final int HEIGHT = 6;
 	public int[][] board; 
 	public int[] available;
 	boolean spaceLeft;
+	//		C4Board visualBoard = new C4Board(); 
+
 
 	public Configuration(){
-		// Create a 7 by 6 board, with 42 total spaces.
 		board = new int[WIDTH][HEIGHT];
-
-		// Initialize an array of integers that will hold the available spots in a column.
 		available = new int[HEIGHT+1]; 
-
-		// Initialize a boolean variable that will be false if no further pieces can be placed on the board.
 		spaceLeft = true; 
 	}
 
 	/**
 	 * Prints out the board(Very basic for now!)
 	 */
-
 	public void print(){
 		System.out.println("| 0 | 1 | 2 | 3 | 4 | 5 | 6 |");
 		System.out.println("+---+---+---+---+---+---+---+");
@@ -48,16 +47,16 @@ public class Configuration {
 		}
 	}
 
+
+
 	/**
 	 * Allow a player to add a disk to the board at a specific column.
 	 * @param column the column that the turn player is placing their piece in
 	 * @param player the turn player
 	 */
-
 	public void addDisk (int column, int player){
-		//System.out.println("Trying to add a piece to column:"+column);
-		this.board[column][this.available[column]] = player;
-		(this.available[column])++;
+		board[column][available[column]] = player;
+		(available[column])++;
 	}
 
 	/**
@@ -65,146 +64,103 @@ public class Configuration {
 	 * @param column the column that we're removing the piece from
 	 * @param player the player whose piece we're removing
 	 */
-
 	public void removeDisk(int column,int player) {
-		this.board[column][this.available[column]-1] = 0;
-		(this.available[column])--;
+		board[column][available[column]-1] = 0;
+		(available[column])--;
 	}
 
 	/**
-	 * Checks if there is a connect "X" on the board. This method will 
-	 * be called by the "wonTheGame" method, which will check for connect 4,
-	 * and the "hasConnectThree method", which will check for connect 3.
-	 * @param lastColumnPlayed takes the location of the last token that was placed
-	 * @param player Checks to see which player placed the last token
-	 * @param x Number of tokens in a row
-	 * @return true if there are "X" tokens in a row, and false if not
+	 * Checks if a player has a connect four horizontally
+	 * @param player the player that is being analyzed
+	 * @return true if the player has a horizontal c4, false otherwise
 	 */
-	private boolean hasConnectX (int lastColumnPlayed, int player, int x){
+	private boolean hasHorizontalC4(int player) {
 
-		//TODO: make methods for each connectX in a row(one for below, one for top left,etc)
-		//X in a row BELOW said piece:
-		int inARowBelow = 0;
-		int row = this.available[lastColumnPlayed] - 1;		
-		int column = lastColumnPlayed;
-		if (row < 0)
-			return false;
-		//If there are no pieces in the 0'th row at this column , return false
-		while (this.board[column][row] == player) {
-			row--;
-			inARowBelow++;
-			if (inARowBelow == x)
-				return true;
-			if (row<0)
-				break;
+		for (int row=0;row<HEIGHT;row++) {
+			for (int column=0;column<WIDTH-3;column++) {
+				if (board[column][row] == player
+						&& board[column+1][row] == player
+						&& board[column+2][row] == player
+						&& board[column+3][row] == player)
+					return true;
+			}
 		}
-		//System.out.println("In a row BELOW: "+ inARowBelow);
-
-		//X in a row TOP LEFT of said piece:
-		int inARowTopLeft=0;
-		row=this.available[lastColumnPlayed] - 1;
-		column = lastColumnPlayed;
-		while ( this.board[column][row] == player) {
-			column--;
-			row++;
-			inARowTopLeft++;
-			if (inARowTopLeft == x)
-				return true;
-			if (row>5 || column<0)
-				break;
-		}
-		//System.out.println("In a row TOP LEFT: "+ inARowTopLeft);
-
-		//X in a row LEFT of said piece:
-		int inARowLeft=0;
-		row=this.available[lastColumnPlayed] - 1;
-		column = lastColumnPlayed;
-		while ( this.board[column][row] == player) {
-			column--;
-			inARowLeft++;
-			if (inARowLeft == x)
-				return true;
-			if (column<0)
-				break;
-		}
-		//System.out.println("In a row LEFT: "+ inARowLeft);
-
-		//X in a row BOTTOM LEFT of said piece:
-		int inARowBottomLeft=0;
-		row=this.available[lastColumnPlayed] - 1;
-		column = lastColumnPlayed;
-		while ( this.board[column][row] == player) {
-			column--;
-			row--;
-			inARowBottomLeft++;
-			if (inARowBottomLeft == x)
-				return true;
-			if (column<0 || row<0)
-				break;
-		}
-		//System.out.println("In a row BOTTOM LEFT: "+ inARowBottomLeft);
-
-		//X in a row BOTTOM RIGHT of said piece:
-		int inARowBottomRight=0;
-		row=this.available[lastColumnPlayed] - 1;
-		column = lastColumnPlayed;
-		while ( this.board[column][row] == player) {
-			column++;
-			row--;
-			inARowBottomRight++;
-			if (inARowBottomRight == x)
-				return true;
-			if (column>6 || row<0)
-				break;
-		}
-		//System.out.println("In a row BOTTOM RIGHT: "+ inARowBottomRight);
-
-		//X in a row RIGHT of said piece:
-		int inARowRight=0;
-		row=this.available[lastColumnPlayed] - 1;
-		column = lastColumnPlayed;
-		while ( this.board[column][row] == player) {
-			column++;
-			inARowRight++;
-			if (inARowRight == x)
-				return true;
-			if (column>6)
-				break;
-		}
-		//System.out.println("In a row RIGHT: "+ inARowRight);
-
-		//X in a row TOP RIGHT of said piece:
-		int inARowTopRight=0;
-		row=this.available[lastColumnPlayed] - 1;
-		column = lastColumnPlayed;
-		while ( this.board[column][row] == player) {
-			column++;
-			row++;
-			inARowTopRight++;
-			if (inARowTopRight == x)
-				return true;
-			if (column>6 || row>5)
-				break;
-		}
-		//System.out.println("In a row TOP RIGHT: "+ inARowTopRight);
-
-		//Don't have to check in a row ABOVE because this is the last piece.
-
-		//Check if the piece is within a connect "X" diagonally:
-		//The piece has been considered twice, so subtract one
-
-		if((inARowTopRight + inARowBottomLeft-1)>= x)
-			return true;
-		if ((inARowTopLeft+inARowBottomRight-1)>=x)
-			return true;
-
-		//Check if the piece is within a connect "X" horizontally:
-		//The piece has been considered twice, so subtract one
-		if ((inARowLeft+inARowRight-1)>=x)
-			return true;
-
-		return false; // The player does  not have connect "X".
+		return false;
 	}
+
+	/**
+	 * Checks if a player has a connect four vertically
+	 * @param player the player that is being analyzed
+	 * @return true if the player has a vertical c4, false otherwise
+	 */
+	private boolean hasVerticalC4(int player) {
+		for (int row=0;row<HEIGHT-3;row++) {
+			for (int column=0;column<WIDTH;column++) {
+				if (board[column][row] == player
+						&& board[column][row+1] == player
+						&& board[column][row+2] == player
+						&& board[column][row+3] == player)
+					return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Checks if a player has a connect four in the \ direction
+	 * @param player the player that is being analyzed
+	 * @return true if the player has a \ c4, false otherwise
+	 */
+	private boolean hasDiagonalBotRightC4(int player) {
+
+		for (int row=0;row<HEIGHT-3;row++) {
+			for (int column=3;column<WIDTH;column++) {
+				if (board[column][row] == player
+						&& board[column-1][row+1] == player
+						&& board[column-2][row+2] == player
+						&& board[column-3][row+3] == player)
+					return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Checks if the player has a connect four in the / direction
+	 * @param player the player that is being analyzed
+	 * @return true if the player has a / c4, false otherwise
+	 */
+	private boolean hasDiagonalTopRightC4(int player) {
+
+		for (int row=0;row<HEIGHT-3;row++) {
+			for (int column=0;column<WIDTH-3;column++) {
+				if (board[column][row] == player
+						&& board[column+1][row+1] == player
+						&& board[column+2][row+2] == player
+						&& board[column+3][row+3] == player)
+					return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Checks if there is a connect 4 on the board.
+	 * A player has a connect 4 if they have four consecutive pieces in any direction:
+	 * Vertically, Horizontally, \, and /
+	 * @param player the player that might have a connect 4
+	 * @return true if the player has connect 4, false otherwise.
+	 */
+	private boolean hasConnect4(int player) {
+
+		if (hasHorizontalC4(player)
+				|| hasVerticalC4(player)
+				|| hasDiagonalBotRightC4(player)
+				|| hasDiagonalTopRightC4(player))
+			return true;
+		return false;
+	}
+
 
 	/**
 	 * Determine if a player's move has won them the game.
@@ -214,7 +170,7 @@ public class Configuration {
 	 * @return true if won, false if lost
 	 */
 	public boolean wonTheGame (int lastColumnPlayed, int player){
-		return hasConnectX(lastColumnPlayed,player,4);
+		return hasConnect4(player);
 	}
 
 	/**
@@ -224,24 +180,19 @@ public class Configuration {
 	 * @return true if a token in this column yields connect 4, false if not.
 	 */
 	public boolean columnYieldsConnect4(int column,int player) {
-		//Check if there's space in the column
 
 		if (hasSpace(column)) {
-			this.addDisk(column,player);
-
-			//Check to see if the player has a connect 4
+			addDisk(column,player);
 			if (wonTheGame(column,player)) {
-				this.removeDisk(column,player);
+				removeDisk(column,player);
 				return true;
 			}
-			//If we haven't won the game, return false
 			else {
-				this.removeDisk(column,player);
+				removeDisk(column,player);
 				return false;
 			}
 		}
 
-		//If there's no space, it obviously returns false
 		else
 			return false;
 	}
@@ -277,6 +228,8 @@ public class Configuration {
 	/**
 	 * Checks to see if the opponent has counterplay.
 	 * Counterplay means the player can play a move that prevents the other player from winning.
+	 * I.e: If the other player doesn't have a connect 4 available after the player places his piece,
+	 * then there is counterplay.
 	 * This method will ONLY be called in "columnYieldsGuaranteedConnect4NextTurn"
 	 * Will return true if counterplay exists, and false if not.
 	 * @param player the player that might have a guaranteed connect 4 available next turn.
@@ -287,14 +240,12 @@ public class Configuration {
 
 		for (int possibleMove=0;possibleMove<WIDTH;possibleMove++) {
 			if (hasSpace(possibleMove)) {
-				this.addDisk(possibleMove,otherPlayer);
-				// If the player doesn't have a connect 4 available for this column, 
-				// then counterplay exists!
+				addDisk(possibleMove,otherPlayer);
 				if (!connect4Available(player)) {
-					this.removeDisk(possibleMove,otherPlayer);
+					removeDisk(possibleMove,otherPlayer);
 					return true;
 				}
-				this.removeDisk(possibleMove, otherPlayer);
+				removeDisk(possibleMove, otherPlayer);
 			}
 		}
 		return false;
@@ -311,25 +262,16 @@ public class Configuration {
 	public boolean columnYieldsGuaranteedConnect4NextTurn(int column,int player) {
 		int otherPlayer = enemyPlayer(player);
 
-		//Make sure there's space in the column
 		if (hasSpace(column)) {
-			this.addDisk(column,player);
-			/*Check to see if the player has a guaranteed connect 4 available.
-			 * This means: no matter where the opponent places his piece, I have a connect 4 available.
-			 */
-
-			//If there is no counterplay to this piece and the opponent can't win
-			//i.e there is no connect4Available(otherplayer)
-			//return true!
-
+			addDisk(column,player);
 			if (!possibleCounterplay(player,otherPlayer) &&
 					!connect4Available(otherPlayer)) {
-				this.removeDisk(column,player);
+				removeDisk(column,player);
 				return true;
 			}
 
 			else {
-				this.removeDisk(column,player);
+				removeDisk(column,player);
 				return false;
 			}
 		}
@@ -344,8 +286,10 @@ public class Configuration {
 	 */
 	public boolean connect4TwoTurnsAvailable(int player) {
 		for (int column=0;column<WIDTH;column++) {
-			if (columnYieldsGuaranteedConnect4NextTurn(column,player))
+			if (columnYieldsGuaranteedConnect4NextTurn(column,player)) {
+				//System.out.println(column + " lead to c4twoturns");
 				return true;
+			}
 		}
 		return false;
 	}
@@ -363,19 +307,10 @@ public class Configuration {
 		}
 	}
 
-	/**
-	 * Check if there is a connect three on the board
-	 * @param lastColumnPlayed takes the location of the last token that was placed
-	 * @param player Checks to see which player placed the last token
-	 * @return returns true if the player has three consecutive tokens, and false otherwise
-	 */
-	public boolean hasConnectThree (int lastColumnPlayed, int player){
-		return hasConnectX(lastColumnPlayed,player,3);
-	}
-
 
 	/**
 	 * Checks to see if placing a token in this column yields connect 3
+	 * without putting the player in a losing position
 	 * @param player The player who wishes to place a token
 	 * @param column the column where the token is being placed
 	 * @return true if connect 3 is obtained, false if not
@@ -383,20 +318,15 @@ public class Configuration {
 	public boolean columnYieldsConnect3(int column, int player) {
 		int otherPlayer = enemyPlayer(player);
 		if (hasSpace(column)) {
-			//drop a disk, check if they have 3 consecutive tokens, then remove it.
-			this.addDisk(column, player);
+			addDisk(column, player);
 
-			/*If this disk is the 3rd consecutive token and doesn't make the other player win
-			 *remove it and add slight power to the column
-			 */
-			if (this.hasConnectThree(column, player) 
-					&& !connect4Available(otherPlayer) &&
-					!connect4TwoTurnsAvailable(otherPlayer)) {
-				this.removeDisk(column,player);
+			if (hasUsefulConnectThree(column, player) 
+					&& !canWinNextTurn(otherPlayer)) {
+				removeDisk(column,player);
 				return true;
 			}
 			else
-				this.removeDisk(column,player);
+				removeDisk(column,player);
 		}
 		return false;
 	}
@@ -440,19 +370,16 @@ public class Configuration {
 		int otherPlayer=enemyPlayer(player);
 
 		if (hasSpace(column)) {
-			this.addDisk(column, player);
-			/*Check if this move doesn't put the other player in a winning position
-			 * and that the player now has a winning move available
-			 */
-			if (	(connect4Available(player) || connect4TwoTurnsAvailable(player)) &&
-					!connect4Available(otherPlayer) &&
-					!connect4TwoTurnsAvailable(otherPlayer)) {
+			addDisk(column, player);
 
-				this.removeDisk(column,player);
+			if (	canWinNextTurn(player) &&
+					!canWinNextTurn(otherPlayer)) {
+				removeDisk(column,player);
 				return true;
 			}
+			
 			else {
-				this.removeDisk(column, player);
+				removeDisk(column, player);
 				return false;
 			}
 		}
@@ -471,16 +398,13 @@ public class Configuration {
 		int otherPlayer = enemyPlayer(player);
 
 		if (hasSpace(column)) {
-			this.addDisk(column, player);
-			//If the opponent no longer has a winning move available, 
-			// add a decent chunk of power to this column
-			if (!connect4Available(otherPlayer) &&
-					!connect4TwoTurnsAvailable(otherPlayer)) {
-				this.removeDisk(column, player);
+			addDisk(column, player);
+			if (!canWinNextTurn(otherPlayer)) {
+				removeDisk(column, player);
 				return true;
 			}
 			else
-				this.removeDisk(column, player);
+				removeDisk(column, player);
 		}
 		return false;
 	}
@@ -523,15 +447,14 @@ public class Configuration {
 	public boolean denialPotentialWinPosition(int column, int player) {
 		int otherPlayer = enemyPlayer(player);
 		if (hasSpace(column)) {
-			this.addDisk(column, player);
-			if (!connect4Available(otherPlayer) &&
-					!connect4TwoTurnsAvailable(otherPlayer)
+			addDisk(column, player);
+			if (!canWinNextTurn(otherPlayer)
 					&& !possibleWin2Turns(otherPlayer)) {
-				this.removeDisk(column, player);
+				removeDisk(column, player);
 				return true;
 			}
 			else {
-				this.removeDisk(column, player);
+				removeDisk(column, player);
 				return false;
 			}
 		}
@@ -548,10 +471,7 @@ public class Configuration {
 	 */
 	public void denyWinningMove(int player,int[] power) {
 		int otherPlayer = enemyPlayer(player);
-		//We have observed that: winningMoveAvailable(otherPlayer)
-		//Let's try to stop it!
-		if (connect4Available(otherPlayer) &&
-				connect4TwoTurnsAvailable(otherPlayer)) {
+		if (canWinNextTurn(otherPlayer)) {
 			for (int column=0;column<WIDTH;column++) {
 				if (denialAttempt(column,player))
 					power[column]+=5000;
@@ -578,23 +498,31 @@ public class Configuration {
 		}
 	}
 
-
+	/**
+	 * If placing a token in a column results in an available connect 3 without
+	 * putting the player in a losing position, this column leads to connect three
+	 * @param column the column where the piece is being placed
+	 * @param player the player that is placing the piece
+	 * @return true or false if the column leads towards connect 3
+	 */
 	public boolean leadsToConnectThree(int column, int player) {
 		int otherPlayer = enemyPlayer(player);
 		if (hasSpace(column)) {
 			addDisk(column, player);
-			// Make sure the move we did didn't push the opponent into a winning position
-			// Make sure there's a connect 3 available next turn
-			if ( !connect4Available(otherPlayer) &&
-					!connect4TwoTurnsAvailable(otherPlayer)
+			if ( !canWinNextTurn(otherPlayer)
 					&& connect3Available(player)) {
-				this.removeDisk(column, player);
+				removeDisk(column, player);
 				return true;
 			}
 			else
-				this.removeDisk(column, player);
+				removeDisk(column, player);
 		}
 		return false;
+	}
+
+	private boolean canWinNextTurn(int player) {
+		return connect4Available(player) ||
+				connect4TwoTurnsAvailable(player);
 	}
 
 	/**
@@ -624,23 +552,17 @@ public class Configuration {
 	public boolean losingPosition(int column, int player) {
 
 		int otherPlayer = enemyPlayer(player);
-		//If there is space in the column, check if placing a piece leads to a losing position
-		//Make sure there's no connect four available.
-//		if (!connect4Available(player)) {
-			if (hasSpace(column)) {
-				addDisk(column,player);
-				if (!wonTheGame(player,column) && (connect4Available(otherPlayer) ||
-						(connect4TwoTurnsAvailable(otherPlayer)))) {
-					removeDisk(column,player);
-					return true;
-				}
-				else {
-					removeDisk(column,player);
-					return false;
-				}
-//			}
+		if (hasSpace(column)) {
+			addDisk(column,player);
+			if (!wonTheGame(column,player) && canWinNextTurn(otherPlayer)) {
+				removeDisk(column,player);
+				return true;
+			}
+			else {
+				removeDisk(column,player);
+				return false;
+			}
 		}
-		//If there is no space, then return false since this column is not a losing position.
 		return false;	
 	}
 
@@ -652,8 +574,9 @@ public class Configuration {
 	 */
 	public void avoidLoss(int player, int[] power) {
 		for (int column=0;column<WIDTH;column++) {
-			//If the column doesn't win the game, and its a losing position, make it -1
-			if (!columnYieldsConnect4(column,player) && losingPosition(column,player))
+			//If the column doesn't win the game, and its a losing position, make the power -1 
+			// So that the player will only play this column if he has no other choice.
+			if (losingPosition(column,player))
 				power[column]= -1;
 		}
 	}
@@ -666,15 +589,338 @@ public class Configuration {
 	 */
 	public void emptyColumns(int player, int[] power) {
 		for (int column=0;column<WIDTH;column++) {
+			//If the column has no space, make the power -2 
+			//So that the player will NEVER play this column.
 			if (!hasSpace(column))
 				power[column] = -2;
 		}
 	}
 
 	/**
+	 * Check to see if the player has a useful connect three directly below the piece. 
+	 * This means:
+	 * There is a space available above the topmost piece so the player can eventually
+	 * get a connect 4 off of this connect 3
+	 * @param column the column where the piece was placed
+	 * @param player the player that is placing the piece.
+	 * @return true if the player has a useful connect three below, false otherwise
+	 */
+	public boolean hasUsefulConnectThreeBelow(int column, int player) {
+		int inARowBelow = 0;
+		int row = available[column] - 1;
+		if (row < 5) {
+			while (board[column][row] == player) {
+				inARowBelow++;
+				row--;
+				if (inARowBelow == 3)
+					return true;
+				//Make sure we don't go past the board.
+				if (row<0)
+					break;
+			}
+		}
+		return false;
+	}
+	/**
+	 * Check to see if the player has a useful connect three top left of the piece. 
+	 * This means:
+	 * There is a space available top left of the last piece, or bottom right of the first piece,
+	 * so the player can eventually get a connect 4 off of this connect 3
+	 * @param column the column where the piece was placed
+	 * @param player the player that is placing the piece.
+	 * @return true if the player has a useful connect three to the top left, false otherwise
+	 */
+	public boolean hasUsefulConnectThreeTopLeft(int column,int player) {
+		int inARowTopLeft=0;
+		int row = available[column] - 1;
+		int otherPlayer = enemyPlayer(player);
+		int initialRow = row;
+		int initialColumn = column;
+
+		while ( board[column][row] == player) {
+			column--;
+			row++;
+			//Make sure the spot to the top left of the piece is within the board.
+			inARowTopLeft++;
+			if (inARowTopLeft == 3) {
+				//Make sure there is a spot available top left of this piece.
+				//OR a space available bottom right of the first piece.
+				if ((row <= 5 && column >= 0 && board[column][row] != otherPlayer) 
+						|| (initialColumn+1<=6 && initialRow-1>=0 &&
+						board[initialColumn+1][initialRow-1] != otherPlayer))
+					return true;
+			}
+			if (row > 5 || column < 0)
+				break;
+		}
+		return false;
+	}
+
+	/**
+	 * Check to see if the player has a useful connect three left of the piece. 
+	 * This means:
+	 * There is a space available left of the last piece, or right of the first, so the player can eventually
+	 * get a connect 4 off of this connect 3
+	 * @param column the column where the piece was placed
+	 * @param player the player that is placing the piece.
+	 * @return true if the player has a useful connect three to the left, false otherwise
+	 */
+	public boolean hasUsefulConnectThreeLeft(int column, int player) {
+		int inARowLeft = 0;
+		int row = available[column] - 1;
+		int otherPlayer = enemyPlayer(player);
+		int initialColumn = column;
+
+		while ( board[column][row] == player) {
+			column--;
+			//If the column is now beyond the board, we'll return false.
+			inARowLeft++;
+			//Make sure the spot to the left of the piece is within the board.
+			if (inARowLeft == 3) {
+				//Make sure the other player isn't blocking us off.
+				if ((column>=0 && board[column][row] != otherPlayer)
+						||(initialColumn+1<=6 && board[initialColumn+1][row] != otherPlayer))
+					return true;
+			}
+			if (column<0)
+				break;
+		}
+		return false;
+	}
+
+	/**
+	 * Check to see if the player has a useful connect three bottom left of the piece. 
+	 * This means:
+	 * There is a space available bottom left of the last piece, or top right of the first piece,
+	 * so the player can eventually get a connect 4 off of this connect 3
+	 * @param column the column where the piece was placed
+	 * @param player the player that is placing the piece.
+	 * @return true if the player has a useful connect three to the bottom left, false otherwise
+	 */
+	public boolean hasUsefulConnectThreeBottomLeft(int column, int player) {
+		int inARowBottomLeft=0;
+		int row=available[column] - 1;
+		int otherPlayer = enemyPlayer(player);
+
+		while ( board[column][row] == player) {
+			column--;
+			row--;
+			inARowBottomLeft++;
+			//If the column or row is now beyond the board, we'll return false.
+			if (inARowBottomLeft == 3) {
+				if (row >= 0 && column>=0 && board[column][row] != otherPlayer) {
+					return true;
+				}
+			}
+			if (row < 0 || column < 0)
+				break;
+
+		}
+		return false;
+	}
+
+	/**
+	 * Check to see if the player has a useful connect three bottom right of the piece. 
+	 * This means:
+	 * There is a space available bottom right of the last piece, or top left of the first piece,
+	 * so the player can eventually get a connect 4 off of this connect 3
+	 * @param column the column where the piece was placed
+	 * @param player the player that is placing the piece.
+	 * @return true if the player has a useful connect three to the bottom right, false otherwise
+	 */
+	public boolean hasUsefulConnectThreeBottomRight(int column, int player) {
+		int inARowBottomRight=0;
+		int row=available[column] - 1;
+		int otherPlayer = enemyPlayer(player);
+		while ( board[column][row] == player) {
+
+			column++;
+			row--;
+			inARowBottomRight++;
+			//If the column or row is now beyond the board, we'll return false.
+			if (inARowBottomRight == 3) {
+				if (column <=6 && row>=0 && board[column][row] != otherPlayer) {
+					return true;
+				}
+			}
+
+			if (column>6 || row<0) 
+				break;
+		}
+		return false;
+	}
+
+	/**
+	 * Check to see if the player has a useful connect three right of the piece. 
+	 * This means:
+	 * There is a space available right of the last piece, or left of the first, so the player can eventually
+	 * get a connect 4 off of this connect 3
+	 * @param column the column where the piece was placed
+	 * @param player the player that is placing the piece.
+	 * @return true if the player has a useful connect three to the right, false otherwise
+	 */
+	public boolean hasUsefulConnectThreeRight (int column, int player) {
+		int inARowRight=0;
+		int row=available[column] - 1;
+		int otherPlayer = enemyPlayer(player);
+		int initialColumn = column; 
+
+		while ( board[column][row] == player) {
+			column++;
+			inARowRight++;
+			//If the column is now beyond the board, we'll return false.
+			if (inARowRight == 3) {
+				if ((column <= 6 && board[column][row] != otherPlayer) 
+						|| (initialColumn-1 >= 0 && 
+						board[initialColumn-1][row] != otherPlayer))
+					return true;
+			}
+			if (column>6)
+				break;
+		}
+
+		return false;
+	}
+
+	/**
+	 * Check to see if the player has a useful connect three right of the piece. 
+	 * This means:
+	 * There is a space available right of the last piece, or bottom left of the first piece,
+	 * so the player can eventually get a connect 4 off of this connect 3
+	 * @param column the column where the piece was placed
+	 * @param player the player that is placing the piece.
+	 * @return true if the player has a useful connect three to the right, false otherwise
+	 */
+	public boolean hasUsefulConnectThreeTopRight (int column, int player) {
+		int inARowTopRight=0;
+		int row=available[column] - 1;
+		int otherPlayer = enemyPlayer(player);
+		int initialRow = row;
+		int initialColumn = column;
+
+		while ( board[column][row] == player) {
+			column++;
+			row++;
+			inARowTopRight++;
+			if (inARowTopRight == 3) {
+				if ((column<=6 && row <=5 && board[column][row] != otherPlayer)
+						||(initialColumn-1>=0 && initialRow-1>=0 &&
+						board[initialColumn-1][initialRow-1] != otherPlayer))
+					return true;
+			}
+			if (column>6 || row>5)
+				break;
+		}
+		return false;
+	}
+	/**
+	 * Check to see if the player has a useful connect three with the piece in the middle
+	 * This means:
+	 * There is a space available either two tokens right of the last piece, or two tokens left
+	 * so the player can eventually get a connect 4 off of this connect 3
+	 * @param column the column where the piece was placed
+	 * @param player the player that is placing the piece.
+	 * @return true if the player has a useful connect three horizontally, false otherwise
+	 */
+	public boolean hasUsefulConnectThreeHorizontal(int column, int player) {
+		int row=available[column] - 1;
+		int otherPlayer = enemyPlayer(player);
+		//Have to make sure column + 1 and column - 1 are not out of bounds!
+		if (column >0 && column < 6 )
+			//The player has a connect 3 with this piece in the middle.
+			if (board[column+1][row] == player && board[column-1][row] == player)
+				//There is an available spot 2 pieces to the right or 2 pieces to the left
+				if (((column+2)<=6 && board[column+2][row] != otherPlayer) ||
+						((column - 2 >=0) && board[column-2][row] != otherPlayer))
+					return true;
+		return false;
+	}
+
+	/**
+	 * Check to see if the player has a useful diagonal connect three with the piece in the middle
+	 * This means:
+	 * There is a space available either two tokens top right of the last piece, or two tokens bottom left
+	 * so the player can eventually get a connect 4 off of this connect 3
+	 * @param column the column where the piece was placed
+	 * @param player the player that is placing the piece.
+	 * @return true if the player has a useful connect three diagonally to the top right, false otherwise
+	 */
+	public boolean hasUsefulConnectThreeBotLeftTopRight(int column, int player) {
+		int row=available[column] - 1;
+		int otherPlayer = enemyPlayer(player);
+		//Have to make sure column + 1,row+1 and column - 1,row-1 are not out of bounds!
+		if (column > 0 && column < 6 && row > 0 && row < 5 )
+			//The player has a connect 3 with this piece in the middle.
+			if (board[column+1][row+1] == player && board[column-1][row-1] == player)
+				//There is an available spot 2 pieces to the top right 
+				// OR 2 pieces to the bot left
+				//HAVE TO MAKE SURE ITS NOT OUT OF BOUNDS!!
+				if (((column+2)<=6 && (row+2)<=5 && board[column+2][row+2] != otherPlayer) ||
+						((column - 2 >=0) && (row - 2 >= 0) && board[column-2][row-2] != otherPlayer))
+					return true;
+		return false;
+	}
+	/**
+	 * Check to see if the player has a useful diagonal connect three with the piece in the middle
+	 * This means:
+	 * There is a space available either two tokens top right of the last piece, or two tokens bottom left
+	 * so the player can eventually get a connect 4 off of this connect 3
+	 * @param column the column where the piece was placed
+	 * @param player the player that is placing the piece.
+	 * @return true if the player has a useful connect diagonally to the top left, false otherwise
+	 */
+	public boolean hasUsefulConnectThreeBotRightTopLeft(int column, int player) {
+		int row=available[column] - 1;
+		int otherPlayer = enemyPlayer(player);
+		//Have to make sure column + 1,row-1 and column - 1,row+1 are not out of bounds!
+		if (column > 0 && column < 6 && row > 0 && row < 5 )
+			//The player has a connect 3 with this piece in the middle.
+			if (board[column+1][row-1] == player && board[column-1][row+1] == player)
+				//There is an available spot 2 pieces to the top left 
+				// OR 2 pieces to the bot right
+				//HAVE TO MAKE SURE ITS NOT OUT OF BOUNDS!!
+				if (((column+2)<=6 && (row-2)>=0 && board[column+2][row-2] != otherPlayer) ||
+						((column - 2 >=0) && (row + 2 <= 5) && board[column-2][row+2] != otherPlayer))
+					return true;
+		return false;
+	}
+
+	/**
+	 * Checks to see if the player placed a piece in a column that yields a useful connect three
+	 * This means:
+	 * There is a space available such that this connect 3 can eventually result in a connect 4
+	 * @param lastColumnPlayed the last column played by the player
+	 * @param player the player that is placing the piece
+	 * @return true if a connect 4 is possible and false otherwise
+	 */
+	public boolean hasUsefulConnectThree (int lastColumnPlayed, int player){
+
+		int row=available[lastColumnPlayed] - 1;
+		//If there are no pieces in the 0'th row at this column , you don't have connect 3
+		if (row < 0)
+			return false;
+
+		//If ANY of the useful connect 3 methods return true, there is a useful connect 3 available
+
+		if (hasUsefulConnectThreeBelow(lastColumnPlayed,player)
+				|| hasUsefulConnectThreeTopLeft(lastColumnPlayed,player)
+				|| hasUsefulConnectThreeLeft(lastColumnPlayed,player)
+				|| hasUsefulConnectThreeBottomLeft(lastColumnPlayed,player)
+				|| hasUsefulConnectThreeBottomRight(lastColumnPlayed,player)
+				|| hasUsefulConnectThreeRight(lastColumnPlayed,player)
+				|| hasUsefulConnectThreeTopRight(lastColumnPlayed,player)
+				|| hasUsefulConnectThreeBotRightTopLeft(lastColumnPlayed,player)
+				|| hasUsefulConnectThreeBotLeftTopRight(lastColumnPlayed,player)
+				|| hasUsefulConnectThreeHorizontal(lastColumnPlayed,player))
+			return true;
+
+		return false; // The player does  not have a useful connect "3".
+	}
+
+	/**
 	 * Determines who the opposing player is
-	 * @param player takes the current player
-	 * @return the enemy player
+	 * @param player the current player
+	 * @return the integer corresponding to the enemy player
 	 */
 	private int enemyPlayer(int player) {
 		int otherPlayer;
@@ -694,10 +940,8 @@ public class Configuration {
 	 * @return true if there is space in the column, false otherwise
 	 */
 	private boolean hasSpace(int column) {
-		return this.available[column]<=5;
+		return available[column]<=5;
 	}
 
-	//TODO: implement a USEFUL connect three method, so the bot doesn't attempt to connect three
-	//OUTSIDE of the board!!
 
 }

@@ -214,10 +214,15 @@ public class TestConfiguration {
 		tester.addDisk(0, player);
 		tester.addDisk(3, player);
 		tester.addDisk(0, player);
+		tester.addDisk(3, otherPlayer);
 		tester.addDisk(0, otherPlayer);
+		tester.print();
 		assertEquals(true,tester.connect4TwoTurnsAvailable(player),
-				"there is no guaranteed connect 4 available");
+				"there is as guaranteed connect 4 available");
 		tester.addDisk(1, otherPlayer);
+		
+		tester.print();
+		
 		assertEquals(false,tester.connect4TwoTurnsAvailable(player),
 				"there is no guaranteed connect 4 available");
 
@@ -260,18 +265,19 @@ public class TestConfiguration {
 		int player = 2;
 
 		for (int column = 0;column<7;column++) {
-			assertEquals(false,tester.hasConnectThree(column, player),"Player should not have connect 3");
+			assertEquals(false,tester.hasUsefulConnectThree(column, player),"Player should not have connect 3");
 		}
 
 		tester.addDisk(2, player);
 		tester.addDisk(3, player);
 
 		for (int column = 0;column<7;column++) {
-			assertEquals(false,tester.hasConnectThree(column, player),"Player should not have connect 3");
+			assertEquals(false,tester.hasUsefulConnectThree(column, player),"Player should not have connect 3");
 		}
 
 		tester.addDisk(4, player);
-		assertEquals(true,tester.hasConnectThree(4, player),"Player should have connect 3");
+
+		assertEquals(true,tester.hasUsefulConnectThree(4, player),"Player should have connect 3");
 	}
 
 	// Test the "columnYieldsConnect3" method:
@@ -529,7 +535,7 @@ public class TestConfiguration {
 		tester.addDisk(4, player);
 		assertEquals(true,tester.losingPosition(1, otherPlayer),"Column 1 is a losing position!");
 	}
-	
+
 	//Test the method "losingPosition" when setting up an enemy's connect4twoturns
 	@Test
 	public void testLosingPositionSettingUpEnemyConnect4TwoTurnsShouldBeTrue() {
@@ -539,7 +545,7 @@ public class TestConfiguration {
 		//Check for any losing positions. Should all be false!
 		for (int column=0;column<7;column++)
 			assertEquals(false,tester.losingPosition(column, player),"There are no losing positions");
-		
+
 
 		tester.addDisk(2, otherPlayer);
 		tester.addDisk(2, player);
@@ -555,12 +561,12 @@ public class TestConfiguration {
 		tester.addDisk(5, player);
 		tester.addDisk(5, player);
 		tester.addDisk(5, otherPlayer); //this should still be a losing position!!!
-		
+
 		// Losing position because:
 		// The connect4TwoTurnsAvialable(player) denies the connect 4 of otherPlayer
 		assertEquals(true,tester.losingPosition(2, otherPlayer),"Column 2 is a losing position!");
 	}
-	
+
 	//Test the method "avoidLoss":
 	@Test
 	public void testAvoidLoss() {
@@ -568,7 +574,7 @@ public class TestConfiguration {
 		int player = 2;
 		int otherPlayer=1;
 		int[] powerRanking = {0,1,2,3,2,1,0};
-		
+
 		tester.avoidLoss(otherPlayer, powerRanking);
 		//None of the indexes should change!
 		assertEquals(0,powerRanking[0],"Power rankings should not have changed");
@@ -593,7 +599,7 @@ public class TestConfiguration {
 		tester.addDisk(5, player);
 		tester.addDisk(5, player);
 		tester.addDisk(5, otherPlayer); //this should still be a losing position!!!
-		
+
 		tester.avoidLoss(otherPlayer, powerRanking);
 
 		//powerRanking[2] should have changed since placing a token in that column leads to a losing position!!
@@ -612,21 +618,31 @@ public class TestConfiguration {
 	public void testLeadsToConnectThree() {
 		Configuration tester = new Configuration();
 		int player=2;
-		
+		int otherPlayer=1;
+
 		for (int column=0;column<7;column++) {
 			assertEquals(false,tester.leadsToConnectThree(column, player),
 					"No columns should lead to connect 3");
 		}
-		
-		tester.addDisk(2, player);
-		
-		assertEquals(true,tester.leadsToConnectThree(0, player),"Column 0 should lead to connect 3");
+
+		tester.addDisk(3, player);
+
+		assertEquals(false,tester.leadsToConnectThree(0, player),"Column 0 should lead to connect 3");
 		assertEquals(true,tester.leadsToConnectThree(1, player),"Column 1 should lead to connect 3");
 		assertEquals(true,tester.leadsToConnectThree(2, player),"Column 2 should lead to connect 3");
 		assertEquals(true,tester.leadsToConnectThree(3, player),"Column 3 should lead to connect 3");
 		assertEquals(true,tester.leadsToConnectThree(4, player),"Column 4 should lead to connect 3");
-		assertEquals(false,tester.leadsToConnectThree(5, player),"Column 5 should not lead to connect 3");
+		assertEquals(true,tester.leadsToConnectThree(5, player),"Column 5 should not lead to connect 3");
 		assertEquals(false,tester.leadsToConnectThree(6, player),"Column 6 should not lead to connect 3");	
+
+
+		tester.addDisk(4,otherPlayer);
+		tester.addDisk(2, player);
+		tester.addDisk(1, player);
+		assertEquals(true,tester.hasUsefulConnectThree(1, player));
+		assertEquals(true,tester.connect3Available(player));
+
+		//	assertEquals(true,tester.leadsToConnectThree(2, player));
 	}
 	//Test the method "moveTowardsConnectThree":
 	@Test
@@ -634,7 +650,7 @@ public class TestConfiguration {
 		Configuration tester = new Configuration();
 		int player=2;
 		int[] powerRanking = {0,1,2,3,2,1,0};
-		
+
 		tester.moveTowardsConnectThree(player, powerRanking);
 		//None of the indexes should change!
 		assertEquals(0,powerRanking[0],"Power rankings should not have changed");
@@ -644,7 +660,7 @@ public class TestConfiguration {
 		assertEquals(2,powerRanking[4],"Power rankings should not have changed");
 		assertEquals(1,powerRanking[5],"Power rankings should not have changed");
 		assertEquals(0,powerRanking[6],"Power rankings should not have changed");
-		
+
 		tester.addDisk(2, player);
 		tester.moveTowardsConnectThree(player, powerRanking);
 		//Indexes 0,1,2,3,4 should change!
@@ -656,6 +672,314 @@ public class TestConfiguration {
 		assertEquals(1,powerRanking[5],"Power rankings should not have changed");
 		assertEquals(0,powerRanking[6],"Power rankings should not have changed");
 	}
-	
+
+	//Test the method "hasUsefulConnectThreeBelow".
+	@Test
+	public void testHasUsefulConnectThreeBelow() {
+		Configuration tester = new Configuration();
+		int player=2;
+		int otherPlayer=1;
+
+		//Set it up such that the connect 3 has many spaces above it.
+		tester.addDisk(3, player);
+		tester.addDisk(3, player);
+		tester.addDisk(3, player);
+		assertEquals(true,tester.hasUsefulConnectThreeBelow(3, player),"Should be true");
+
+		//Set it up such that the connect 3 does not have a space available above it
+		tester.removeDisk(3, player);
+		tester.addDisk(3, otherPlayer);
+		tester.addDisk(3, player);
+		tester.addDisk(3, player);
+		tester.addDisk(3, player);
+
+		assertEquals(false,tester.hasUsefulConnectThreeBelow(3, player),"Should be false");
+
+		//Set it up such that the connect 3 only has one space available above it.
+		tester.removeDisk(3, player);
+		tester.removeDisk(3, player);
+		tester.removeDisk(3, player);
+		tester.removeDisk(3, otherPlayer);
+		tester.removeDisk(3, player);
+		tester.addDisk(3, otherPlayer);
+		tester.addDisk(3, player);
+		tester.addDisk(3, player);
+		tester.addDisk(3, player);
+
+		assertEquals(true,tester.hasUsefulConnectThreeBelow(3, player),"Should be true");
+	}
+
+	//Test the method "hasUsefulConnectThreeTopLeft".
+	@Test
+	public void testhasUsefulConnectThreeTopLeft() {
+		Configuration tester = new Configuration();
+		int player=2;
+		int otherPlayer=1;
+
+		//Set the player up for a simple connect 3 to the top left.
+		tester.addDisk(3, player);
+		tester.addDisk(2, otherPlayer);
+		tester.addDisk(2, player);
+		tester.addDisk(1, otherPlayer);
+		tester.addDisk(1, otherPlayer);
+		tester.addDisk(1,player);
+
+		//Set up otherPlayer for a connect 3 that wont have space to the top left of the last piece.
+		tester.addDisk(0, otherPlayer);
+		tester.addDisk(0, player);
+		tester.addDisk(0, otherPlayer);
+
+		assertEquals(true,tester.hasUsefulConnectThreeTopLeft(3, player),"Should be true");
+		assertEquals(false,tester.hasUsefulConnectThreeTopLeft(2, otherPlayer),"Should be false");
+		tester.addDisk(0, otherPlayer);
+		assertEquals(false,tester.hasUsefulConnectThreeTopLeft(3, player),"Should be false");
+	}
+
+	//Test the method "hasUsefulConnectThreeLeft".
+	@Test
+	public void testhasUsefulConnectThreeLeft() {
+		Configuration tester = new Configuration();
+		int player=2;
+		int otherPlayer=1;
+
+		//Set it up for a simple connect 3 to the left.
+		tester.addDisk(3, player);
+		tester.addDisk(2,player);
+		tester.addDisk(1, player);
+		assertEquals(true,tester.hasUsefulConnectThree(3, player),"Should be true");
+
+		//Block off the initial connect 3.
+		tester.addDisk(4, otherPlayer);
+		assertEquals(true,tester.hasUsefulConnectThree(3, player),"Should be true, left spot still open");
+
+		tester.addDisk(0, otherPlayer);
+		assertEquals(false,tester.hasUsefulConnectThree(3, player),"Should be false");
+		tester.removeDisk(4, otherPlayer);
+		assertEquals(true,tester.hasUsefulConnectThree(3, player),"Should be true, right spot still open");
+
+
+
+
+
+
+		tester.addDisk(2, player);
+		tester.addDisk(1, player);
+		tester.addDisk(0, player);
+		tester.addDisk(3, otherPlayer);
+		assertEquals(false,tester.hasUsefulConnectThree(2,player),"Should be false");
+	}
+
+	//Test the method "hasUsefulConnectThreeBottomLeft".
+	@Test
+	public void testhasUsefulConnectThreeBottomLeft() {
+		Configuration tester = new Configuration();
+		int player=2;
+		int otherPlayer=1;
+
+		//Set it up for a simple connect 3 to the left.
+		tester.addDisk(3, otherPlayer);
+		tester.addDisk(3, otherPlayer);
+		tester.addDisk(3, player);
+		tester.addDisk(2, otherPlayer);
+		tester.addDisk(2, player);
+		tester.addDisk(2, player);
+		tester.addDisk(1,player);
+		tester.addDisk(1, player);
+
+		//tester.print();
+		assertEquals(false,tester.hasUsefulConnectThreeBottomLeft(3, player),
+				"Should be false, there is no space(out of bounds) for a potential c4 bottom left");
+
+		tester.addDisk(3, player);
+		//		tester.print();
+		assertEquals(true,tester.hasUsefulConnectThreeBottomLeft(3, player),
+				"Should be true,there is space for a potential c4 bottom left");
+	}
+
+	//Test the method "hasUsefulConnectThreeBottomRight":
+	@Test
+	public void testhasUsefulConnectThreeBottomRight() {
+		Configuration tester = new Configuration();
+		int player=2;
+		int otherPlayer=1;
+
+		//Set it up for a simple connect 3 to the left.
+		tester.addDisk(3, otherPlayer);
+		tester.addDisk(3, otherPlayer);
+		tester.addDisk(3, player);
+		tester.addDisk(4, otherPlayer);
+		tester.addDisk(4, player);
+		tester.addDisk(4, player);
+		tester.addDisk(5,player);
+		tester.addDisk(5, player);
+
+				//tester.print();
+		assertEquals(false,tester.hasUsefulConnectThreeBottomRight(3, player),
+				"Should be false, there is no space(out of bounds) for a potential c4 bottom right");
+
+		tester.addDisk(3, player);
+		//		tester.print();
+		assertEquals(true,tester.hasUsefulConnectThreeBottomRight(3, player),
+				"Should be true,there is space for a potential c4 bottom right");
+
+		tester.addDisk(6, otherPlayer);
+	}
+
+	//Test the method "hasUsefulConnectThreeRight":
+	@Test
+	public void testhasUsefulConnectThreeRight() {
+		Configuration tester = new Configuration();
+		int player=2;
+		int otherPlayer=1;
+
+		//Set it up for a simple connect 3 to the right.
+		tester.addDisk(3,player);
+		tester.addDisk(4,player);
+		tester.addDisk(5,player);
+		assertEquals(true,tester.hasUsefulConnectThree(3, player),
+				"Should be true, there's an available spot for connect 4");
+
+		//Block off the initial connect 3.
+		tester.addDisk(6, otherPlayer);
+		assertEquals(true,tester.hasUsefulConnectThree(3, player),
+				"Should be true, there's an available spot for connect 4");
+		tester.addDisk(2, otherPlayer);
+		//tester.print();
+		assertEquals(false,tester.hasUsefulConnectThree(3, player),
+				"Should be false, there is no c4 available on the right since otherplayer is blokcing it");
+
+		tester.addDisk(4, player);
+		tester.addDisk(5, player);
+		tester.addDisk(6, player);
+		//tester.print();
+		assertEquals(true,tester.hasUsefulConnectThree(4, player),
+				"Should be true, there's space on board for a c4");
+	}
+
+	//Test the method "hasUsefulConnectThreeTopRight":
+	@Test
+	public void testhasUsefulConnectThreeTopRight() {
+		Configuration tester = new Configuration();
+		int player=2;
+		int otherPlayer=1;
+
+		//Set the player up for a simple connect 3 to the top left.
+		tester.addDisk(3, player);
+		tester.addDisk(4, otherPlayer);
+		tester.addDisk(4, player);
+		tester.addDisk(5, otherPlayer);
+		tester.addDisk(5, otherPlayer);
+		tester.addDisk(5,player);
+
+		//Set up otherPlayer for a connect 3 that wont have space to the top left of the last piece.
+		tester.addDisk(6, otherPlayer);
+		tester.addDisk(6, player);
+		tester.addDisk(6, otherPlayer);
+
+		assertEquals(true,tester.hasUsefulConnectThreeTopRight(3, player),"Should be true");
+		assertEquals(false,tester.hasUsefulConnectThreeTopRight(4, otherPlayer),"Should be false");
+
+		//Block the player off from a connect 4 from column 3
+		tester.addDisk(6, otherPlayer);
+
+		assertEquals(false,tester.hasUsefulConnectThreeTopRight(3, player),"Should be false");
+	}
+
+	//Test the method "hasUsefulConnectThreeHorizontal":
+	@Test
+	public void testHasUsefulConnectThreeHorizontal() {
+		Configuration tester = new Configuration();
+		int player=2;
+		int otherPlayer=1;
+
+		tester.addDisk(0, player);
+		tester.addDisk(1, player);
+		tester.addDisk(2, player);
+		assertEquals(true,tester.hasUsefulConnectThreeHorizontal(1, player),"Should be true");
+
+		tester.addDisk(4, player);
+		tester.addDisk(5, player);
+		tester.addDisk(6, player);
+
+		assertEquals(true,tester.hasUsefulConnectThreeHorizontal(5, player),"Should be true");
+		//Block off the other side of the c4
+		tester.addDisk(3,otherPlayer);
+		assertEquals(false,tester.hasUsefulConnectThreeHorizontal(1, player),"Should be true");
+		assertEquals(false,tester.hasUsefulConnectThreeHorizontal(5, player),"Should be true");
+	}
+
+	//Test the method "hasUsefulConnectThreeBotLeftTopRight":
+	@Test
+	public void testHasUsefulConnectThreeBotLeftTopRight() {
+		Configuration tester = new Configuration();
+		int player=2;
+		int otherPlayer=1;
+
+		//Set the player up for a simple connect 3 to the top left.
+		tester.addDisk(3, player);
+		tester.addDisk(4, otherPlayer);
+		tester.addDisk(4, player);
+		tester.addDisk(5, otherPlayer);
+		tester.addDisk(5, otherPlayer);
+		tester.addDisk(5,player);
+
+		//Set up otherPlayer for a connect 3 that wont have space to the top left of the last piece.
+		tester.addDisk(6, otherPlayer);
+		tester.addDisk(6, player);
+		tester.addDisk(6, otherPlayer);
+
+		assertEquals(true,tester.hasUsefulConnectThreeBotLeftTopRight(4, player),"Should be true");
+		assertEquals(false,tester.hasUsefulConnectThreeBotLeftTopRight(5, otherPlayer),"Should be false");
+
+		//Block the player off from a connect 4 from column 4
+		tester.addDisk(6,otherPlayer);
+		assertEquals(false,tester.hasUsefulConnectThreeBotLeftTopRight(4, player),"Should be false");
+
+		tester.removeDisk(6, otherPlayer);
+		tester.removeDisk(3, player);
+		tester.addDisk(6, player);
+		assertEquals(true,tester.hasUsefulConnectThreeBotLeftTopRight(5, player),"Should be true");
+
+		tester.addDisk(3, otherPlayer);
+
+		assertEquals(false,tester.hasUsefulConnectThreeBotLeftTopRight(5, player),"Should be false");
+	}
+
+	//Test the method "hasUsefulConnectThreeBotRightTopLeft":
+	@Test
+	public void testHasUsefulConnectThreeBotRightTopLeft() {
+		Configuration tester = new Configuration();
+		int player=2;
+		int otherPlayer=1;
+
+		//Set the player up for a simple connect 3 to the top left.
+		tester.addDisk(3, player);
+		tester.addDisk(2, otherPlayer);
+		tester.addDisk(2, player);
+		tester.addDisk(1, otherPlayer);
+		tester.addDisk(1, otherPlayer);
+		tester.addDisk(1,player);
+
+		//Set up otherPlayer for a connect 3 that wont have space to the top left of the last piece.
+		tester.addDisk(0, otherPlayer);
+		tester.addDisk(0, player);
+		tester.addDisk(0, otherPlayer);
+
+		assertEquals(true,tester.hasUsefulConnectThreeBotRightTopLeft(2, player),"Should be true");
+		assertEquals(false,tester.hasUsefulConnectThreeBotRightTopLeft(1, otherPlayer),"Should be false");
+
+		//Block the player off from a connect 4 from column 4
+		tester.addDisk(0,otherPlayer);
+		assertEquals(false,tester.hasUsefulConnectThreeBotRightTopLeft(2, player),"Should be false");
+
+		tester.removeDisk(0, otherPlayer);
+		tester.removeDisk(3, player);
+		tester.addDisk(0, player);
+		assertEquals(true,tester.hasUsefulConnectThreeBotRightTopLeft(1, player),"Should be true");
+
+		tester.addDisk(3, otherPlayer);
+
+		assertEquals(false,tester.hasUsefulConnectThreeBotRightTopLeft(1, player),"Should be false");
+	}
 }
 
